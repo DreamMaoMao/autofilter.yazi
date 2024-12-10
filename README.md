@@ -3,6 +3,12 @@
 A [Yazi](https://github.com/sxyazi/yazi) plugin that support set filter for a folder, when you enter the foler, it will auto apply a filter that you set before.
 
 
+
+https://github.com/user-attachments/assets/95413870-7c31-4a32-b5ac-abbfc3d9c108
+
+
+
+
 > [!NOTE]
 > The latest main branch of Yazi is required at the moment.
 
