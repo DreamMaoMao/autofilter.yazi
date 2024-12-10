@@ -200,6 +200,7 @@ return {
 					ya.manager_emit("filter_do", { st.autofilter[tostring(cwd)].word, smart = true })
 					st.need_flush_mime = true
 					st.url =  tostring(cx.active.current.hovered.url)
+					ya.err("filter")
 				else
 					st.is_auto_filter_cwd = false
 				end
@@ -217,7 +218,7 @@ return {
 				job.files = window
 				require("mime-ext"):fetch(job)
 				st.need_flush_mime = false
-				st.cwd = ""
+				ya.err("mime")
 			end
 			if st.url ~= url then
 				st.url = url
