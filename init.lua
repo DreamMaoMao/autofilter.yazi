@@ -100,9 +100,9 @@ local save_autofilter = ya.sync(function(state,word,key)
 		timeout = 2,
 		level = "info",
 	}
-	state.url = ""
 	ya.manager_emit("filter_do", { word, smart = true })
-	state.need_flush_mime = true
+	state.force_fluse_header = true
+	state.force_fluse_mime = true
 	-- ya.render()
 	save_to_file(SERIALIZE_PATH)
 end)
@@ -118,10 +118,9 @@ local delete_autofilter = ya.sync(function(state)
 		level = "info",
 	}
 	state.autofilter[key] = nil
-	state.url = ""
 	ya.manager_emit("filter_do", { "", smart = true })
-	state.need_flush_mime = true
-	-- ya.render()
+	state.force_fluse_header = true
+	state.force_fluse_mime = true
   save_to_file(SERIALIZE_PATH)
 end)
 
@@ -133,10 +132,9 @@ local delete_all_autofilter = ya.sync(function(state)
 		level = "info",
 	}
 	state.autofilter = nil
-	state.url = ""
 	ya.manager_emit("filter_do", { "", smart = true })
-	state.need_flush_mime = true
-	-- ya.render()
+	state.force_fluse_header = true
+	state.force_fluse_mime = true
 	delete_lines_by_content(SERIALIZE_PATH,".*")
 end)
 
@@ -193,14 +191,14 @@ return {
 		-- add a nil module to header to detect cwd change
 		local function cwd_change_detect(self)
 			local cwd = cx.active.current.cwd
-			if st.cwd ~= cwd then
+			if st.cwd ~= cwd or st.force_fluse_header then
+				st.force_fluse_header = false
 				st.cwd = cwd
 				if st.autofilter[tostring(cwd)] then
 					st.is_auto_filter_cwd = true
 					ya.manager_emit("filter_do", { st.autofilter[tostring(cwd)].word, smart = true })
 					st.need_flush_mime = true
 					st.url =  tostring(cx.active.current.hovered.url)
-					ya.err("filter")
 				else
 					st.is_auto_filter_cwd = false
 				end
@@ -213,12 +211,12 @@ return {
 		local function Status_mime(self)
 			local window = cx.active.current.window
 			local url = cx.active.current.hovered and tostring(cx.active.current.hovered.url) or ""
-			if st.need_flush_mime and url ~= st.url then
+			if (st.need_flush_mime and url ~= st.url) or st.force_fluse_mime then
 				local job = {}
+				st.force_fluse_mime = false
 				job.files = window
-				require("mime-ext"):fetch(job)
+				require("mime-ext").fetch(job)
 				st.need_flush_mime = false
-				ya.err("mime")
 			end
 			if st.url ~= url then
 				st.url = url
