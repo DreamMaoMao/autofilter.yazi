@@ -1,9 +1,3 @@
--- stylua: ignore
-local SUPPORTED_KEYS = {
-	"a","s","d","j","k","l","p", "b", "e", "t",  "o", "i", "n", "r", "h","c",
-	"u", "m", "f", "g", "w", "v", "x", "z", "y", "q"
-}
-
 local LINUX_BASE_PATH = "/.config/yazi/plugins/autofilter.yazi/filtercache"
 local WINDOWS_BASE_PATH = "\\yazi\\config\\plugins\\autofilter.yazi\\filtercache"
 
@@ -33,7 +27,7 @@ local function delete_lines_by_content(file_path, pattern)
 
     -- Write back the lines that don't match the pattern
     file = io.open(file_path, "w")
-    for i, line in ipairs(lines) do
+    for _, line in ipairs(lines) do
         file:write(line .. "\n")
     end
     file:close()
@@ -43,7 +37,7 @@ end
 local save_to_file = ya.sync(function(state,filename)
     local file = io.open(filename, "w+")
 	for path, f in pairs(state.autofilter) do
-		file:write(string.format("%s###%s###%s",f.on,path,f.word), "\n")
+		file:write(string.format("%s###%s",path,f.word), "\n")
 	end
     file:close()
 end)
@@ -65,12 +59,11 @@ local load_file_to_state = ya.sync(function(state,filename)
 	for line in file:lines() do
 		line = line:gsub("[\r\n]", "")
 		local autofilter = string_split(line,"###")
-		if autofilter == nil or #autofilter < 3 then
+		if autofilter == nil or #autofilter < 2 then
 			goto nextline
 		end
-		state.autofilter[autofilter[2]] = {
-			on = autofilter[1],
-			word = autofilter[3],
+		state.autofilter[autofilter[1]] = {
+			word = autofilter[2],
 		}
 
 		::nextline::
@@ -80,7 +73,7 @@ end)
 
 
 
-local save_autofilter = ya.sync(function(state,word,key)
+local save_autofilter = ya.sync(function(state,word)
 
 	-- avoid add exists path
 	for path, _ in pairs(state.autofilter) do
@@ -90,7 +83,6 @@ local save_autofilter = ya.sync(function(state,word,key)
 	end
 
 	state.autofilter[tostring(cx.active.current.cwd)] = {
-		on = key,
 		word = tostring(word),
 	}
 
@@ -103,11 +95,8 @@ local save_autofilter = ya.sync(function(state,word,key)
 	ya.manager_emit("filter_do", { word, smart = true })
 	state.force_fluse_header = true
 	state.force_fluse_mime = true
-	-- ya.render()
 	save_to_file(SERIALIZE_PATH)
 end)
-
-local all_autofilter = ya.sync(function(state) return state.autofilter or {} end)
 
 local delete_autofilter = ya.sync(function(state)
 	local key = tostring(cx.active.current.cwd)
@@ -121,7 +110,7 @@ local delete_autofilter = ya.sync(function(state)
 	ya.manager_emit("filter_do", { "", smart = true })
 	state.force_fluse_header = true
 	state.force_fluse_mime = true
-  save_to_file(SERIALIZE_PATH)
+  	save_to_file(SERIALIZE_PATH)
 end)
 
 local delete_all_autofilter = ya.sync(function(state)
@@ -137,51 +126,6 @@ local delete_all_autofilter = ya.sync(function(state)
 	state.force_fluse_mime = true
 	delete_lines_by_content(SERIALIZE_PATH,".*")
 end)
-
-
-local function keyset_notify(str)
-	ya.notify {
-		title = "keyset",
-		content = str,
-		timeout = 2,
-		level = "info",
-	}	
-end
-
-local auto_generate_key = ya.sync(function(state)
-	-- if input_key is empty,auto find a key to bind from begin SUPPORTED_KEYS
-	local find = false
-	local auto_assign_key
-	for i, key in ipairs(SUPPORTED_KEYS) do
-		if find then
-			break
-		end
-
-		for _, cand in pairs(state.autofilter) do
-			if key == cand.on then
-				goto continue				
-			end
-		end
-		
-		auto_assign_key = key
-		find = true
-
-		::continue::
-	end	
-
-	if find then
-		return auto_assign_key
-	else
-		keyset_notify("assign fail,all key has been assign")
-		return nil
-	end
-end)
-
-
-local function get_bind_key()
-	local generate_key = auto_generate_key()
-	return generate_key
-end
 
 return {
 	setup = function(st,opts)
@@ -203,7 +147,7 @@ return {
 					st.is_auto_filter_cwd = false
 				end
 			end
-			return st.is_auto_filter_cwd and ui.Line { ui.Span(" [AH]"):fg(color):bold() } or ui.Line{}
+			return st.is_auto_filter_cwd and ui.Line { ui.Span(" [AF]"):fg(color):bold() } or ui.Line{}
 		end
 
 		Header:children_add(cwd_change_detect,8000,Header.LEFT)
@@ -241,20 +185,14 @@ return {
 				position = { "top-center", y = 3, w = 40 },
 			})
 			if event == 1 then
-				local key = get_bind_key()
-				if key == nil then
-					return
-				end
-				save_autofilter(value,key)
+				save_autofilter(value)
 			end
 			return
 		end
 
-
 		if action == "delete_all" then
 			return delete_all_autofilter()
 		end
-
 
 		if action == "delete" then
 			delete_autofilter()
