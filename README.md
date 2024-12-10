@@ -1,6 +1,6 @@
 # autofilter.yazi
 
-A [Yazi](https://github.com/sxyazi/yazi) plugin that support set filter for a folder, when you enter the foler, it will auto apply a filter that you set before
+A [Yazi](https://github.com/sxyazi/yazi) plugin that support set filter for a folder, when you enter the foler, it will auto apply a filter that you set before.
 
 
 > [!NOTE]
