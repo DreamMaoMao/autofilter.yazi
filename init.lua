@@ -145,7 +145,7 @@ end)
 
 return {
 	setup = function(st,opts)
-		load_file_to_state(SERIALIZE_PATH)
+		
 		local color = opts and opts.color and config.color or "#CE91A0"
 
 		-- add a nil module to header to detect cwd change
@@ -185,6 +185,9 @@ return {
 		end
 	
 		Status:children_add(Status_mime,100000,Status.LEFT)
+
+		-- Async load data, avoid block yazi start
+		ya.manager_emit("plugin",{"autofilter",args="init"})
 	end,
 
 	entry = function(_,job)
@@ -192,6 +195,10 @@ return {
 		local action = args[1]
 		if not action then
 			return
+		end
+
+		if action == "init" then
+			load_file_to_state(SERIALIZE_PATH)
 		end
 
 		if action == "save" then
