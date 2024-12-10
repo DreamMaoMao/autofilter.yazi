@@ -42,6 +42,11 @@ local save_to_file = ya.sync(function(state,filename)
     file:close()
 end)
 
+local function file_exists(name)
+	local f=io.open(name,"r")
+	if f~=nil then io.close(f) return true else return false end
+end
+
 -- load from file to state
 local load_file_to_state = ya.sync(function(state,filename)
 
@@ -62,13 +67,17 @@ local load_file_to_state = ya.sync(function(state,filename)
 		if autofilter == nil or #autofilter < 2 then
 			goto nextline
 		end
-		state.autofilter[autofilter[1]] = {
-			word = autofilter[2],
-		}
+		if file_exists(autofilter[1]) then
+			state.autofilter[autofilter[1]] = {
+				word = autofilter[2],
+			}
+		end
 
 		::nextline::
 	end
     file:close()
+	--auto clean no-exists-path line
+	save_to_file(filename)
 end)
 
 
