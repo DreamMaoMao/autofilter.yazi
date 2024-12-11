@@ -154,7 +154,7 @@ return {
 			if st.cwd ~= cwd or st.force_fluse_header then
 				st.force_fluse_header = false
 				st.cwd = cwd
-				if st.autofilter[tostring(cwd)] then
+				if st.autofilter and st.autofilter[tostring(cwd)] then
 					st.is_auto_filter_cwd = true
 					ya.manager_emit("filter_do", { st.autofilter[tostring(cwd)].word, smart = true })
 					st.need_flush_mime = true
@@ -171,16 +171,15 @@ return {
 		local function Status_mime(self)
 			local window = cx.active.current.window
 			local url = cx.active.current.hovered and tostring(cx.active.current.hovered.url) or ""
-			if (st.need_flush_mime and url ~= st.url) or st.force_fluse_mime then
+			if (st.need_flush_mime and url ~= st.url and window and #window > 0) or st.force_fluse_mime then
 				local job = {}
 				st.force_fluse_mime = false
 				job.files = window
 				require("mime-ext").fetch(job)
 				st.need_flush_mime = false
-			end
-			if st.url ~= url then
 				st.url = url
 			end
+
 			return ui.Line {}
 		end
 	
