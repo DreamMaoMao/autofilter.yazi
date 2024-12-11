@@ -88,6 +88,10 @@ local load_file_to_state = ya.sync(function(state,filename)
 end)
 
 
+local get_unmatch_ext_urls = ya.sync(function(state)
+	return state.unmatch_ext_urls
+end)
+
 
 local save_autofilter = ya.sync(function(state,word)
 
@@ -143,6 +147,56 @@ local delete_all_autofilter = ya.sync(function(state)
 	delete_lines_by_content(SERIALIZE_PATH,".*")
 end)
 
+local SUPPORTED_TYPES = "application/audio/biosig/chemical/font/image/inode/message/model/rinex/text/vector/video/x-epoc/"
+
+local function match_mimetype(s)
+	local type, sub = s:match("([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
+	if type and sub and string.find(SUPPORTED_TYPES, type, 1, true) then
+		return type .. sub
+	end
+end
+
+local flush_mime_by_ext = ya.sync(function(state)
+	local files =  cx.active.current.window
+	local ext_mime_map
+	local status, mime_preview_module = pcall(require, "mime-preview")
+	if status then 	-- mime-preview module exists
+		ext_mime_map = mime_preview_module:get_mime_data() 
+	else
+		ext_mime_map = {}
+	end
+	local mimes = {}
+	state.unmatch_ext_urls = {}
+
+	for _, file in ipairs(files) do
+	  local url = tostring(file.url)
+
+	  local ext = tostring(file.name):match("^.+%.(.+)$")
+	  if ext then
+		ext = ext:lower()
+		local ext_mime = ext_mime_map[ext]
+		if ext_mime then
+		  mimes[url] = ext_mime
+		  goto continue
+		end
+	  end
+	  state.unmatch_ext_urls[#state.unmatch_ext_urls + 1] = url
+	  ::continue::
+	end
+
+
+	if #mimes then
+		ya.manager_emit("update_mimes", { updates = mimes })
+		ya.manager_emit("update_mimetype", { updates = mimes })
+	end
+	
+	if #state.unmatch_ext_urls then
+		ya.manager_emit("plugin",{"autofilter",args="flush_mime_by_file_cmd"})
+	end
+
+end)
+
+
 return {
 	setup = function(st,opts)
 		
@@ -172,10 +226,8 @@ return {
 			local window = cx.active.current.window
 			local url = cx.active.current.hovered and tostring(cx.active.current.hovered.url) or ""
 			if (st.need_flush_mime and url ~= st.url and window and #window > 0) or st.force_fluse_mime then
-				local job = {}
 				st.force_fluse_mime = false
-				job.files = window
-				require("mime-ext").fetch(job)
+				ya.manager_emit("plugin",{"autofilter",args="flush_mime_by_ext"})
 				st.need_flush_mime = false
 				st.url = url
 			end
@@ -198,6 +250,47 @@ return {
 
 		if action == "init" then
 			load_file_to_state(SERIALIZE_PATH)
+		end
+
+		if action == "flush_mime_by_ext" then
+			flush_mime_by_ext()
+		end
+
+		if action == "flush_mime_by_file_cmd" then
+			local mimes = {}
+			local unmatch_ext_urls = get_unmatch_ext_urls()
+			local file_one_path = os.getenv("YAZI_FILE_ONE") or "file"
+	  		local command = Command(file_one_path):arg("--mime-type"):stdout(Command.PIPED):stderr(Command.PIPED)
+	  		if ya.target_family() == "windows" then
+				command:arg("-b")
+	  		else
+				command:arg("-bL")
+	  		end
+		
+	  		local i = 1
+	  		local mime
+	  		local output = command:args(unmatch_ext_urls):output()
+	  		for line in output.stdout:gmatch("[^\r\n]+") do
+				if i > #unmatch_ext_urls then
+				  break
+				end
+			
+				mime = match_mimetype(line)
+			
+				if mime and string.find(line, mime, 1, true) ~= 1 then
+					goto continue
+				elseif mime then
+					mimes[unmatch_ext_urls[i]] = mime
+				i = i + 1
+				end
+				::continue::
+	  		end
+
+			if #mimes then
+				ya.manager_emit("update_mimes", { updates = mimes })
+				ya.manager_emit("update_mimetype", { updates = mimes })
+			end
+		
 		end
 
 		if action == "save" then

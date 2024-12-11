@@ -2,9 +2,9 @@
 
 A [Yazi](https://github.com/sxyazi/yazi) plugin that support set filter for a folder, when you enter the foler, it will auto apply a filter that you set before.
 
-# dependcy
+# notice
 
-this plugin reuquire `mime-ext` to flush status plugins
+this plugin need flush mime-type after auto filter, so the suggest use  `mime-preview` plugin to accelerate flush
 
 https://github.com/user-attachments/assets/95413870-7c31-4a32-b5ac-abbfc3d9c108
 
