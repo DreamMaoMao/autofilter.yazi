@@ -126,7 +126,13 @@ local save_autofilter = ya.sync(function(state,word)
 end)
 
 local delete_autofilter = ya.sync(function(state)
+
 	local key = tostring(cx.active.current.cwd)
+
+	if state.autofilter[key] == nil then
+		return
+	end
+
 	ya.notify {
 		title = "autofilter",
 		content = "autofilter:<"..state.autofilter[key].word .."> deleted",
