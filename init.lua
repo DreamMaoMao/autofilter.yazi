@@ -43,15 +43,15 @@ local save_to_file = ya.sync(function(state,filename)
 end)
 
 local function file_exists(name)
+	local command
 	if ya.target_family() == "windows" then
-    	local command = "IF EXIST " .. name .. " (echo 1) ELSE (echo 0)"
-    	local output = io.popen(command):read("*a")
-    	output = output:gsub("%s+", "")
-    return output == "1"
+    	command = "IF EXIST " .. name .. " (echo 1) ELSE (echo 0)"
 	else
-		local f=io.open(name,"r")
-		if f~=nil then io.close(f) return true else return false end
+		command = "test -e " .. name .. " && echo 1 || echo 0"
 	end
+    local output = io.popen(command):read("*a")
+    output = output:gsub("%s+", "")
+    return output == "1"
 end
 
 -- load from file to state
