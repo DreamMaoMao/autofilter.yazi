@@ -251,26 +251,25 @@ return {
 
 		if action == "init" then
 			local data = {}
-			local file = io.open(SERIALIZE_PATH, "w+")
-			if file == nil then 
-				return
-			end
+			local file = io.open(SERIALIZE_PATH, "r")
+			if file then 
 		
-			for line in file:lines() do
-				line = line:gsub("[\r\n]", "")
-				local autofilter = string_split(line,"###")
-				if autofilter == nil or #autofilter < 2 then
-					goto nextline
+				for line in file:lines() do
+					line = line:gsub("[\r\n]", "")
+					local autofilter = string_split(line,"###")
+					if autofilter == nil or #autofilter < 2 then
+						goto nextline
+					end
+					if file_exists(autofilter[1]) then
+						data[autofilter[1]] = {
+							word = autofilter[2],
+						}
+					end
+				
+					::nextline::
 				end
-				if file_exists(autofilter[1]) then
-					data[autofilter[1]] = {
-						word = autofilter[2],
-					}
-				end
-		
-				::nextline::
+				file:close()
 			end
-			file:close()
 			--auto clean no-exists-path line
 			load_file_to_state(data)
 			save_to_file(SERIALIZE_PATH)
