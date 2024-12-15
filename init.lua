@@ -251,7 +251,7 @@ return {
 
 		if action == "init" then
 			local data = {}
-			local file = io.open(SERIALIZE_PATH, "r")
+			local file = io.open(SERIALIZE_PATH, "w+")
 			if file == nil then 
 				return
 			end
