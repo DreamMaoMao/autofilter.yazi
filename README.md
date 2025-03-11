@@ -45,7 +45,7 @@ desc = "Delete all autofilter"
 ```
 
 ## config (init.lua)
-```
+```lua
 require("autofilter"):setup({
   cache_path = '/home/xxx/autofiltercache',
 })
