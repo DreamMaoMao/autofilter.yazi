@@ -43,3 +43,12 @@ run = "plugin autofilter --args='delete_all'"
 desc = "Delete all autofilter"
 
 ```
+
+## config (init.lua)
+```
+require("autofilter"):setup({
+  cache_path = '/home/xxx/autofiltercache',
+})
+```
+```
+```
