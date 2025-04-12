@@ -104,10 +104,10 @@ local save_autofilter = ya.sync(function(state,word)
 		timeout = 2,
 		level = "info",
 	}
-	ya.manager_emit("filter_do", { word, smart = true })
+	ya.mgr_emit("filter_do", { word, smart = true })
 	state.force_fluse_header = true
 	state.force_fluse_mime = true
-	ya.manager_emit("plugin",{"autofilter",args="resave"})
+	ya.mgr_emit("plugin",{"autofilter","resave"})
 end)
 
 local delete_autofilter = ya.sync(function(state)
@@ -125,10 +125,10 @@ local delete_autofilter = ya.sync(function(state)
 		level = "info",
 	}
 	state.autofilter[key] = nil
-	ya.manager_emit("filter_do", { "", smart = true })
+	ya.mgr_emit("filter_do", { "", smart = true })
 	state.force_fluse_header = true
 	state.force_fluse_mime = true
-	ya.manager_emit("plugin",{"autofilter",args="resave"})
+	ya.mgr_emit("plugin",{"autofilter","resave"})
 end)
 
 local delete_all_autofilter = ya.sync(function(state)
@@ -139,7 +139,7 @@ local delete_all_autofilter = ya.sync(function(state)
 		level = "info",
 	}
 	state.autofilter = nil
-	ya.manager_emit("filter_do", { "", smart = true })
+	ya.mgr_emit("filter_do", { "", smart = true })
 	state.force_fluse_header = true
 	state.force_fluse_mime = true
 	delete_lines_by_content(state.cache_path,".*")
@@ -178,12 +178,12 @@ local flush_mime_by_ext = ya.sync(function(state)
 
 
 	if #mimes then
-		ya.manager_emit("update_mimes", { updates = mimes })
-		ya.manager_emit("update_mimetype", { updates = mimes })
+		ya.mgr_emit("update_mimes", { updates = mimes })
+		ya.mgr_emit("update_mimetype", { updates = mimes })
 	end
 	
 	if #state.unmatch_ext_urls then
-		ya.manager_emit("plugin",{"autofilter",args="flush_mime_by_file_cmd"})
+		ya.mgr_emit("plugin",{"autofilter","flush_mime_by_file_cmd"})
 	end
 
 end)
@@ -211,7 +211,7 @@ return {
 				st.cwd = cwd
 				if st.autofilter and st.autofilter[tostring(cwd)] then
 					st.is_auto_filter_cwd = true
-					ya.manager_emit("filter_do", { st.autofilter[tostring(cwd)].word, smart = true })
+					ya.mgr_emit("filter_do", { st.autofilter[tostring(cwd)].word, smart = true })
 					st.need_flush_mime = true
 					st.url =  tostring(cx.active.current.hovered.url)
 				else
@@ -228,7 +228,7 @@ return {
 			local url = cx.active.current.hovered and tostring(cx.active.current.hovered.url) or ""
 			if (st.need_flush_mime and url ~= st.url and window and #window > 0) or st.force_fluse_mime then
 				st.force_fluse_mime = false
-				ya.manager_emit("plugin",{"autofilter",args="flush_mime_by_ext"})
+				ya.mgr_emit("plugin",{"autofilter","flush_mime_by_ext"})
 				st.need_flush_mime = false
 				st.url = url
 			end
@@ -239,7 +239,7 @@ return {
 		Status:children_add(Status_mime,100000,Status.LEFT)
 
 		-- Async load data, avoid block yazi start
-		ya.manager_emit("plugin",{"autofilter",args="init"})
+		ya.mgr_emit("plugin",{"autofilter","init"})
 	end,
 
 	entry = function(_,job)
@@ -316,8 +316,8 @@ return {
 	  		end
 
 			if #mimes then
-				ya.manager_emit("update_mimes", { updates = mimes })
-				ya.manager_emit("update_mimetype", { updates = mimes })
+				ya.mgr_emit("update_mimes", { updates = mimes })
+				ya.mgr_emit("update_mimetype", { updates = mimes })
 			end
 		
 		end
