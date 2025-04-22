@@ -29,17 +29,17 @@ Add this to your `keymap.toml`:
 ```toml
 [[manager.prepend_keymap]]
 on = [ "u", "a" ]
-run = "plugin autofilter --args='save'"
+run = "plugin autofilter -- save"
 desc = "set filter for current folder"
 
 [[manager.prepend_keymap]]
 on = [ "u", "d" ]
-run = "plugin autofilter --args='delete'"
+run = "plugin autofilter -- delete"
 desc = "Delete autofilter fo current folder"
 
 [[manager.prepend_keymap]]
 on = [ "u", "D" ]
-run = "plugin autofilter --args='delete_all'"
+run = "plugin autofilter -- delete_all"
 desc = "Delete all autofilter"
 
 ```
